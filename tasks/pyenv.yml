@@ -1,0 +1,50 @@
+---
+- name: Install Python via pyenv
+  block:
+    - name: Create tmp download dir
+      file:
+        path: "{{ python_tmpdir }}"
+        state: directory
+      changed_when: false
+
+    - name: install pyenv
+      block:
+        - name: download installer
+          get_url:
+            url: https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer
+            dest: "{{ python_tmpdir }}"
+          changed_when: false
+
+        - name: run installer
+          command: "bash pyenv-installer
+          args:
+            chdir: "{{ python_tmpdir }}"
+            creates: "{{ ansible_user_dir }}/.pyenv"
+
+        - name: update rc file
+          blockinfile:
+            path: "{{ python_rcfile }}"
+            create: true
+            block: |
+            export PATH="{{ ansible_user_dir }}/.pyenv/bin:$PATH"
+            eval "$(pyenv init -)"
+            eval "$(pyenv virtualenv-init -)"
+
+        - name: update pyenv
+          command: pyenv update
+
+    - name: install python
+      block:
+        - name: install python
+          command: "pyenv install {{ python_version }}"
+          args:
+            creates: "{{ ansible_user_dir }}/.pyenv/versions/{{ python_version }}"
+
+        - name: run pyenv rehash
+          command: "pyenv rehash"
+
+        - name: create symlink to /usr/bin/
+          file:
+            src: "{{ ansible_user_dir }}/.pyenv/versions/{{ python_version }}"
+            dst: "/usr/bin/{{ python_version }}"
+            state: link
