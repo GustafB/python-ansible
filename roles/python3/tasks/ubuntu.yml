@@ -1,22 +1,21 @@
 ---
-- name: install python3 via packagemgr (yum)
+- name: install python3 via packagemgr (apt)
   block:
     - name: install system packages
       become: true
-      yum:
+      apt:
         name:
           - python-setuptools
           - python3-setuptools
           - python3
           - python3-pip
-          - python3-devel
+          - virtualenv
         state: present
 
     - name: install utilities
       become: true
       pip:
         name:
-          - virtualenv
           - pipenv
         state: present
         executable: pip3
@@ -24,21 +23,16 @@
   when: python_version == None
 
 - name: install pyenv build dependencies
-  yum:
+  apt:
     name:
-      - libffi-devel
-      - zlib-devel
-      - bzip2-devel
-      - readline-devel
-      - sqlite-devel
-      - wget
       - curl
-      - llvm
-      - ncurses-devel
-      - openssl-devel
-      - lzma-sdk-devel
-      - libyaml-devel
-      - redhat-rpm-config
+      - gcc
+      - git
+      - libbz2-dev
+      - libreadline-dev
+      - libssl-dev
+      - libsqlite3-dev
+      - zlib1g-dev
       - make
     state: present
   when: python_version != None

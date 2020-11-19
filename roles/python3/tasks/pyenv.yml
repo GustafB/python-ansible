@@ -1,5 +1,5 @@
 ---
-- name: Install Python via pyenv
+- name: install Python via pyenv
   block:
     - name: create temporary build dir
       tempfile:

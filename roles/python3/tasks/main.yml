@@ -1,7 +1,7 @@
 ---
-- name: Install via OS pkgmanager
+- name: install via OS pkgmanager
   include_tasks: "{{ ansible_distribution|lower }}.yml"
 
-- name: Install specific version via pyenv
+- name: install specific version via pyenv
   include_tasks: pyenv.yml
   when: python_version != None
