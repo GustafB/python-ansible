@@ -1,0 +1,4 @@
+- hosts: all
+  roles:
+    - name: python3
+      python_version: 3.6.12

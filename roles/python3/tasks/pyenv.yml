@@ -1,24 +1,24 @@
 ---
 - name: Install Python via pyenv
   block:
-    - name: Create tmp download dir
-      file:
-        path: "{{ python_tmpdir }}"
+    - name: create temporary build dir
+      tempfile:
         state: directory
-      changed_when: false
+        suffix: build
+      register: python_build_dir
 
     - name: install pyenv
       block:
         - name: download installer
           get_url:
             url: https://github.com/pyenv/pyenv-installer/raw/master/bin/pyenv-installer
-            dest: "{{ python_tmpdir }}"
+            dest: "{{ python_build_dir.path }}"
           changed_when: false
 
         - name: run installer
-          command: "bash pyenv-installer
+          command: "bash pyenv-installer"
           args:
-            chdir: "{{ python_tmpdir }}"
+            chdir: "{{ python_build_dir.path }}"
             creates: "{{ ansible_user_dir }}/.pyenv"
 
         - name: update rc file
@@ -26,9 +26,9 @@
             path: "{{ python_rcfile }}"
             create: true
             block: |
-            export PATH="{{ ansible_user_dir }}/.pyenv/bin:$PATH"
-            eval "$(pyenv init -)"
-            eval "$(pyenv virtualenv-init -)"
+              export PATH="{{ ansible_user_dir }}/.pyenv/bin:$PATH"
+              eval "$(pyenv init -)"
+              eval "$(pyenv virtualenv-init -)"
 
         - name: update pyenv
           command: pyenv update
@@ -43,8 +43,16 @@
         - name: run pyenv rehash
           command: "pyenv rehash"
 
+        - name: get python<major.minor> executable
+          set_fact: python_executable="python{{ python_major }}.{{ python_minor }}"
+          vars:
+            version_list: "{{ python_version.split('.') }}"
+            python_major: "{{ version_list[0] }}"
+            python_minor: "{{ version_list[1] }}"
+
         - name: create symlink to /usr/bin/
           file:
-            src: "{{ ansible_user_dir }}/.pyenv/versions/{{ python_version }}"
-            dst: "/usr/bin/{{ python_version }}"
+            src: "{{ ansible_user_dir }}/.pyenv/versions/{{ python_version }}/bin/{{ python_executable }}"
+            dest: "/usr/bin/{{ python_executable }}"
             state: link
+          become: true
